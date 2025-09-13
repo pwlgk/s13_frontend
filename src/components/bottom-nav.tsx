@@ -50,8 +50,8 @@ export function BottomNav() {
                   : "text-muted-foreground hover:text-primary" // Стиль для неактивной вкладки
               }`}
             >
-              <item.icon className="h-5 w-5" />
-              <span>{item.label}</span>
+              <item.icon className="h-6 w-6" />
+              {/* <span>{item.label}</span> */}
             </Link>
           );
         })}
