@@ -18,8 +18,16 @@ import { useUserStore } from "@/store/user-store";
 interface SearchEntity { id: number; name: string; type: 'group' | 'tutor'; }
 interface Lesson { id: number; subject_name: string; lesson_type: string; tutor: { name: string }; auditory: { name: string }; time_slot: number; group: {id: number, name: string} }
 interface DaySchedule { date: string; lessons: Lesson[]; }
-const timeSlots: { [key: number]: string } = { /* ... */ }; // Скопируйте timeSlots из page.tsx
-
+const timeSlots: { [key: number]: string } = {
+  1: "08:45 - 10:20",
+  2: "10:30 - 12:05",
+  3: "12:45 - 14:20",
+  4: "14:30 - 16:05",
+  5: "16:15 - 17:50",
+  6: "18:00 - 19:35",
+  7: "19:45 - 21:20",
+  8: "21:30 - 23:05",
+};
 interface WeekScheduleViewProps {
   entity: SearchEntity;
 }

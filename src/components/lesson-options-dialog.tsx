@@ -14,8 +14,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 interface Tutor { name: string; }
 interface Auditory { name: string; }
 interface Lesson { id: number; subject_name: string; lesson_type: string; tutor: Tutor; auditory: Auditory; time_slot: number; }
-const timeSlots: { [key: number]: string } = { 1: "08:30 - 10:00", 2: "10:10 - 11:40", 3: "12:10 - 13:40", 4: "13:50 - 15:20", 5: "15:50 - 17:20", 6: "17:30 - 19:00", };
-
+const timeSlots: { [key: number]: string } = {
+  1: "08:45 - 10:20",
+  2: "10:30 - 12:05",
+  3: "12:45 - 14:20",
+  4: "14:30 - 16:05",
+  5: "16:15 - 17:50",
+  6: "18:00 - 19:35",
+  7: "19:45 - 21:20",
+  8: "21:30 - 23:05",
+};
 interface LessonOptionsDialogProps {
   lessons: Lesson[];
   trigger: React.ReactNode; // Компонент, который будет открывать модальное окно (наша карточка)

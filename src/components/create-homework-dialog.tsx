@@ -19,8 +19,16 @@ import { Loader2, AlertTriangle, ArrowLeft } from "lucide-react";
 // Типы
 interface Lesson { id: number; subject_name: string; time_slot: number; }
 interface DaySchedule { lessons: Lesson[]; }
-const timeSlots: { [key: number]: string } = { 1: "08:30", 2: "10:10", 3: "12:10", 4: "13:50", 5: "15:50", 6: "17:30" };
-
+const timeSlots: { [key: number]: string } = {
+  1: "08:45 - 10:20",
+  2: "10:30 - 12:05",
+  3: "12:45 - 14:20",
+  4: "14:30 - 16:05",
+  5: "16:15 - 17:50",
+  6: "18:00 - 19:35",
+  7: "19:45 - 21:20",
+  8: "21:30 - 23:05",
+};
 // Функции API
 const fetchLessonsForDate = async (date: Date): Promise<DaySchedule> => {
   const formattedDate = format(date, "yyyy-MM-dd");
