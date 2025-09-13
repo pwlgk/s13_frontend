@@ -13,8 +13,7 @@ import { OnboardingScreen } from './onboarding-screen';
 import { BlockedScreen } from './blocked-screen';
 import { InvalidEnvironmentScreen } from './invalid-environment-screen';
 import { FullscreenLoader } from './fullscreen-loader';
-
-
+import { useManageTelegramBackButton } from "@/hooks/use-telegram-back-button"
 // Этот компонент содержит всю логику, которая выполняется ПОСЛЕ
 // того, как мы убедились, что находимся на клиенте.
 function AppLogic({ children }: { children: ReactNode }) {
@@ -24,7 +23,7 @@ function AppLogic({ children }: { children: ReactNode }) {
   
   // Состояние, чтобы отслеживать, если initData так и не появился
   const [isInvalidEnv, setIsInvalidEnv] = useState(false);
-
+useManageTelegramBackButton();
   useEffect(() => {
     if (launchParams) {
       if(launchParams.themeParams.colorScheme) {
