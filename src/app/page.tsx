@@ -1,103 +1,216 @@
-import Image from "next/image";
+// src/app/page.tsx
+"use client";
 
-export default function Home() {
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
+import { api } from "@/lib/api";
+
+// Импорты для UI и компонентов
+import { BottomNav } from "@/components/bottom-nav";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Calendar as CalendarIcon, AlertTriangle, Users } from "lucide-react";
+import { LessonOptionsDialog } from "@/components/lesson-options-dialog";
+import { HomeworkDialog } from "@/components/homework-dialog"; // <-- Импортируем компонент ДЗ
+
+// Определяем типы на основе вашей OpenAPI спецификации
+interface Tutor { name: string; }
+interface Auditory { name: string; }
+interface Lesson {
+  id: number;
+  subject_name: string;
+  lesson_type: string;
+  tutor: Tutor;
+  auditory: Auditory;
+  time_slot: number;
+}
+interface DaySchedule {
+  date: string;
+  lessons: Lesson[];
+}
+
+// Асинхронная функция для загрузки данных
+const fetchSchedule = async (date: Date): Promise<DaySchedule> => {
+  const formattedDate = format(date, "yyyy-MM-dd");
+  const { data } = await api.get(`/api/v1/schedule/my/day`, {
+    params: { target_date: formattedDate },
+  });
+  return data;
+};
+
+// Соответствие номера пары времени
+const timeSlots: { [key: number]: string } = {
+  1: "08:30 - 10:00",
+  2: "10:10 - 11:40",
+  3: "12:10 - 13:40",
+  4: "13:50 - 15:20",
+  5: "15:50 - 17:20",
+  6: "17:30 - 19:00",
+};
+
+// Вспомогательная функция для группировки занятий по номеру пары
+const groupLessonsByTimeSlot = (lessons: Lesson[]): Record<number, Lesson[]> => {
+  if (!lessons) return {};
+  return lessons.reduce((acc, lesson) => {
+    const slot = lesson.time_slot;
+    if (!acc[slot]) {
+      acc[slot] = [];
+    }
+    acc[slot].push(lesson);
+    return acc;
+  }, {} as Record<number, Lesson[]>);
+};
+
+export default function SchedulePage() {
+  const [date, setDate] = useState<Date>(new Date());
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+
+  const { data, isLoading, isError, error } = useQuery<DaySchedule, Error>({
+    queryKey: ["schedule", format(date, "yyyy-MM-dd")],
+    queryFn: () => fetchSchedule(date),
+  });
+
+  // Группируем полученные данные с помощью useMemo для оптимизации
+  const groupedLessons = useMemo(() => {
+    return data ? groupLessonsByTimeSlot(data.lessons) : {};
+  }, [data]);
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="flex flex-col min-h-screen">
+      <main className="flex-1 overflow-y-auto pb-20">
+        <div className="container mx-auto max-w-2xl p-4 space-y-4">
+          
+          {/* Адаптивный блок с заголовком и календарем */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <h1 className="text-2xl font-bold tracking-tight">Расписание</h1>
+            <Dialog open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+              <DialogTrigger asChild>
+                <Button variant={"outline"} className="w-full sm:w-[280px] justify-start text-left font-normal">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {format(date, "PPP", { locale: ru })}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px] p-0">
+                <DialogHeader>
+                  <DialogTitle className="sr-only">Выберите дату</DialogTitle>
+                </DialogHeader>
+                <div className="flex justify-center pt-4">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={(newDate) => {
+                      if (newDate) {
+                        setDate(newDate);
+                        setIsDatePickerOpen(false);
+                      }
+                    }}
+                    initialFocus
+                    locale={ru}
+                  />
+                </div>
+                <DialogFooter className="p-4 pt-0">
+                  <Button className="w-full" variant="ghost" onClick={() => setIsDatePickerOpen(false)}>Закрыть</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          {/* Обработка состояний загрузки и ошибки */}
+          {isLoading && (
+            <div className="space-y-4">
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+          )}
+
+          {isError && (
+            <Card className="bg-destructive/10 border-destructive">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-destructive"><AlertTriangle className="h-5 w-5"/>Ошибка</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-destructive">Не удалось загрузить расписание.</p>
+                <p className="text-sm text-muted-foreground mt-2">{error.message}</p>
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Новая логика рендеринга сгруппированных занятий */}
+          {data && Object.keys(groupedLessons).length > 0 && (
+            <div className="space-y-4">
+              {Object.keys(groupedLessons).sort((a,b) => +a - +b).map(timeSlot => {
+                const lessonsInSlot = groupedLessons[Number(timeSlot)];
+                const firstLesson = lessonsInSlot[0];
+
+                // Случай 1: Только одно занятие в это время
+                if (lessonsInSlot.length === 1) {
+                  return (
+                    // Оборачиваем обычную карточку в HomeworkDialog
+                    <HomeworkDialog
+                      key={firstLesson.id}
+                      lessonId={firstLesson.id}
+                      subjectName={firstLesson.subject_name}
+                      trigger={
+                        <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+                          <CardHeader>
+                            <CardTitle>{firstLesson.subject_name}</CardTitle>
+                            <CardDescription>{timeSlots[firstLesson.time_slot] || `Пара №${firstLesson.time_slot}`}</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-sm text-muted-foreground space-y-1">
+                              <p><strong>Тип:</strong> {firstLesson.lesson_type}</p>
+                              <p><strong>Преподаватель:</strong> {firstLesson.tutor.name}</p>
+                              <p><strong>Аудитория:</strong> {firstLesson.auditory.name}</p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      }
+                    />
+                  );
+                }
+
+                // Случай 2: Несколько занятий (электив)
+                return (
+                  <LessonOptionsDialog
+                    key={timeSlot}
+                    lessons={lessonsInSlot}
+                    trigger={
+                      <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+                        <CardHeader>
+                          <CardTitle>{firstLesson.subject_name}</CardTitle>
+                          <CardDescription>{timeSlots[firstLesson.time_slot] || `Пара №${firstLesson.time_slot}`}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex items-center text-sm text-primary">
+                            <Users className="h-4 w-4 mr-2" />
+                            <span>Доступно {lessonsInSlot.length} варианта — нажмите для выбора</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    }
+                  />
+                );
+              })}
+            </div>
+          )}
+
+          {/* Состояние, когда на день нет занятий */}
+          {data && Object.keys(groupedLessons).length === 0 && (
+            <div className="text-center py-10">
+              <p className="text-muted-foreground">На выбранный день занятий нет.</p>
+            </div>
+          )}
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      
+      {/* Нижняя навигация */}
+      <BottomNav />
     </div>
   );
 }
