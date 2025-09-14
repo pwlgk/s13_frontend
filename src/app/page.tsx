@@ -1,9 +1,9 @@
 // src/app/page.tsx
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, getDay, nextMonday } from "date-fns";
 import { ru } from "date-fns/locale";
 import { api } from "@/lib/api";
 
@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar as CalendarIcon, AlertTriangle, Users } from "lucide-react";
 import { LessonOptionsDialog } from "@/components/lesson-options-dialog";
 import { HomeworkDialog } from "@/components/homework-dialog"; // <-- Импортируем компонент ДЗ
+import { Header } from "@/components/header";
 
 // Определяем типы на основе вашей OpenAPI спецификации
 interface Tutor { name: string; }
@@ -69,21 +70,45 @@ const groupLessonsByTimeSlot = (lessons: Lesson[]): Record<number, Lesson[]> => 
 };
 
 export default function SchedulePage() {
+  // 1. НАЧАЛЬНАЯ ДАТА - ВСЕГДА СЕГОДНЯ
   const [date, setDate] = useState<Date>(new Date());
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
-  const { data, isLoading, isError, error } = useQuery<DaySchedule, Error>({
+  const { data, isLoading, isError, error, isSuccess } = useQuery<DaySchedule, Error>({
     queryKey: ["schedule", format(date, "yyyy-MM-dd")],
     queryFn: () => fetchSchedule(date),
   });
+  
+  // 2. НОВЫЙ useEffect ДЛЯ "УМНОГО" ПЕРЕКЛЮЧЕНИЯ
+  useEffect(() => {
+    // Этот эффект сработает, когда запрос завершится успешно (`isSuccess` станет true)
+    if (isSuccess && data) {
+      const today = new Date();
+      // Проверяем, что текущая выбранная дата - это действительно сегодня
+      // и что мы не переключились на понедельник вручную
+      const isDateToday = format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
+      
+      // Если сегодня нет занятий, и сегодня суббота или воскресенье
+      if (isDateToday && data.lessons.length === 0) {
+        const dayOfWeek = getDay(today); // 0 = Воскресенье, 6 = Суббота
+        if (dayOfWeek === 6 || dayOfWeek === 0) {
+          // Автоматически переключаемся на следующий понедельник
+          setDate(nextMonday(today));
+        }
+      }
+    }
+  }, [isSuccess, data, date]); // <-- Зависим от статуса запроса и данных
+
 
   // Группируем полученные данные с помощью useMemo для оптимизации
   const groupedLessons = useMemo(() => {
     return data ? groupLessonsByTimeSlot(data.lessons) : {};
   }, [data]);
+  const showNoLessonsMessage = isSuccess && data && data.lessons.length === 0;
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col">
+      <Header />
       <main className="flex-1 overflow-y-auto pb-20">
         <div className="container mx-auto max-w-2xl p-4 space-y-4">
           

@@ -10,9 +10,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ArrowRight, AlertTriangle } from "lucide-react";
+import { ArrowLeft, ArrowRight, AlertTriangle, Users } from "lucide-react";
 import { HomeworkDialog } from "./homework-dialog";
 import { useUserStore } from "@/store/user-store";
+import { LessonOptionsDialog } from "./lesson-options-dialog";
 
 // Типы
 interface SearchEntity { id: number; name: string; type: 'group' | 'tutor'; }
@@ -31,6 +32,15 @@ const timeSlots: { [key: number]: string } = {
 interface WeekScheduleViewProps {
   entity: SearchEntity;
 }
+const groupLessonsByTimeSlot = (lessons: Lesson[]): Record<number, Lesson[]> => {
+  if (!lessons) return {};
+  return lessons.reduce((acc, lesson) => {
+    const slot = lesson.time_slot;
+    if (!acc[slot]) { acc[slot] = []; }
+    acc[slot].push(lesson);
+    return acc;
+  }, {} as Record<number, Lesson[]>);
+};
 
 // 1. НОВАЯ УНИВЕРСАЛЬНАЯ ФУНКЦИЯ ЗАГРУЗКИ
 const fetchWeekSchedule = async (entity: SearchEntity, date: Date): Promise<DaySchedule[]> => {
@@ -98,36 +108,75 @@ export function WeekScheduleView({ entity }: WeekScheduleViewProps) {
             )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {data?.map((day) => (
-          <Card key={day.date}>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>{format(new Date(day.date), "EEEE", { locale: ru })}</span>
-                {isToday(new Date(day.date)) && <Badge>Сегодня</Badge>}
-              </CardTitle>
-              <CardDescription>{format(new Date(day.date), "d MMMM", { locale: ru })}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {day.lessons.length > 0 ? (
-                day.lessons.map(lesson => {
-                  const canInteract = user?.group_id === lesson.group.id;
-                  const lessonCard = (
-                     <div className="text-sm p-2 border-l-2 rounded-r-md">
-                        <p className="font-medium">{lesson.subject_name}</p>
-                        <p className="text-muted-foreground">{entity.type === 'group' ? lesson.tutor.name : lesson.group.name}</p>
-                        <p className="text-muted-foreground">{lesson.auditory.name}</p>
-                      </div>
-                  );
-                  return canInteract ? (
-                     <HomeworkDialog key={lesson.id} lessonId={lesson.id} subjectName={lesson.subject_name} trigger={<div className="cursor-pointer hover:bg-muted/50 transition-colors">{lessonCard}</div>}/>
-                  ) : ( <div key={lesson.id}>{lessonCard}</div> );
-                })
-              ) : (
-                <p className="text-sm text-muted-foreground">Занятий нет</p>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+        {data?.map((day) => {
+          // 2. ГРУППИРУЕМ ЗАНЯТИЯ ДЛЯ КАЖДОГО ДНЯ
+          const groupedLessons = groupLessonsByTimeSlot(day.lessons);
+
+          return (
+            <Card key={day.date}>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>{format(new Date(day.date), "EEEE", { locale: ru })}</span>
+                  {isToday(new Date(day.date)) && <Badge>Сегодня</Badge>}
+                </CardTitle>
+                <CardDescription>{format(new Date(day.date), "d MMMM", { locale: ru })}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {day.lessons.length > 0 ? (
+                  // 3. РЕНДЕРИМ СГРУППИРОВАННЫЕ ДАННЫЕ
+                  Object.keys(groupedLessons).sort((a,b) => +a - +b).map(timeSlot => {
+                    const lessonsInSlot = groupedLessons[Number(timeSlot)];
+                    const firstLesson = lessonsInSlot[0];
+                    const canInteract = user?.group_id === firstLesson.group.id;
+
+                    // Случай 1: Одно занятие в слоте
+                    if (lessonsInSlot.length === 1) {
+                      const lessonCard = (
+                        <div className="text-sm p-2 border-l-2 rounded-r-md">
+                           <p className="font-medium">{firstLesson.subject_name}</p>
+                           <p className="text-muted-foreground">{timeSlots[firstLesson.time_slot] || `Пара №${firstLesson.time_slot}`}</p>
+                           <p className="text-muted-foreground">{entity.type === 'group' ? firstLesson.tutor.name : firstLesson.group.name}</p>
+                           <p className="text-muted-foreground">{firstLesson.auditory.name}</p>
+                         </div>
+                      );
+                      // Если можно взаимодействовать - оборачиваем в диалог ДЗ, иначе - простой div
+                      return canInteract ? (
+                         <HomeworkDialog key={firstLesson.id} lessonId={firstLesson.id} subjectName={firstLesson.subject_name} trigger={<div className="cursor-pointer hover:bg-muted/50 transition-colors">{lessonCard}</div>}/>
+                      ) : ( <div key={firstLesson.id}>{lessonCard}</div> );
+                    }
+
+                    // Случай 2: Несколько занятий (электив)
+                    // Используем ту же структуру, что и для одиночного занятия
+                    const electiveCard = (
+                        <div className="text-sm p-2 border-l-2 border-primary/50 rounded-r-md">
+                           <p className="font-medium">{firstLesson.subject_name}</p>
+                           <p className="text-muted-foreground">{timeSlots[firstLesson.time_slot] || `Пара №${firstLesson.time_slot}`}</p>
+                           <div className="flex items-center text-primary font-semibold mt-1">
+                                <Users className="h-4 w-4 mr-1.5" />
+                                <span>{lessonsInSlot.length} препод. на выбор</span>
+                           </div>
+                         </div>
+                    );
+
+                    return (
+                      <LessonOptionsDialog
+                        key={timeSlot}
+                        lessons={lessonsInSlot}
+                        trigger={
+                          <div className="cursor-pointer hover:bg-muted/50 transition-colors">
+                              {electiveCard}
+                          </div>
+                        }
+                      />
+                    );
+                  })
+                ) : (
+                  <p className="text-sm text-muted-foreground">Занятий нет</p>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

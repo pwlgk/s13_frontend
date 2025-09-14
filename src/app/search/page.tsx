@@ -7,6 +7,7 @@ import { GroupSearch } from "@/components/group-search";
 import { TutorSearch } from "@/components/tutor-search"; // Создадим далее
 import { WeekScheduleView } from "@/components/week-schedule-view";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Header } from "@/components/header";
 
 // Универсальный тип для выбранной сущности
 interface SearchEntity {
@@ -19,14 +20,15 @@ export default function SearchPage() {
   const [selectedEntity, setSelectedEntity] = useState<SearchEntity | null>(null);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col">
+      <Header />
       <main className="flex-1 overflow-y-auto pb-20">
         <div className="container mx-auto max-w-4xl p-4 space-y-6">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Поиск расписания</h2> <br />
-            <p className="text-muted-foreground">
+            <h2 className="text-2xl font-bold tracking-tight">Поиск расписания</h2> 
+            {/* <p className="text-muted-foreground">
               Выберите тип поиска и найдите расписание по группе или преподавателю.
-            </p>
+            </p> */}
           </div>
 
           <Tabs defaultValue="group" className="w-full" onValueChange={() => setSelectedEntity(null)}>

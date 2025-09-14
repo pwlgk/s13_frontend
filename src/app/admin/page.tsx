@@ -11,6 +11,7 @@ import { SystemTab } from "@/components/admin/system-tab"; // Создадим �
 import { Toaster } from "@/components/ui/sonner"; // Для уведомлений
 import { Loader2 } from "lucide-react";
 import { ChatsTab } from "@/components/admin/chats-tab";
+import { Header } from "@radix-ui/react-accordion";
 export default function AdminPage() {
     const { user, isLoading } = useUserStore();
     const router = useRouter();
@@ -38,12 +39,13 @@ export default function AdminPage() {
     // Если все проверки пройдены, показываем админку
     return (
         <>
-            <div className="flex flex-col min-h-screen">
+            <div className="flex flex-col">
+                <Header />
                 <main className="flex-1 overflow-y-auto pb-20">
                     <div className="container mx-auto max-w-4xl p-4 space-y-6">
                         <div>
-                            <h2 className="text-3xl font-bold tracking-tight">Панель администратора</h2><br />
-                            <p className="text-muted-foreground">Управление пользователями и системой.</p>
+                            <h2 className="text-2xl font-bold tracking-tight">Панель администратора</h2>
+                            {/* <p className="text-muted-foreground">Управление пользователями и системой.</p> */}
                         </div>
 
                         <Tabs defaultValue="users">

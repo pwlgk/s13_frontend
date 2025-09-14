@@ -20,6 +20,7 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2, Pencil } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { Header } from "@/components/header";
 
 // 1. ПРОСТОЙ ИНТЕРФЕЙС ВМЕСТО СХЕМЫ ZOD
 interface SettingsFormValues {
@@ -109,11 +110,12 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col">
+      <Header />
       <main className="flex-1 overflow-y-auto pb-20">
         <div className="container mx-auto max-w-2xl p-4 space-y-8">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Настройки</h2><br />
+            <h2 className="text-2xl font-bold tracking-tight">Настройки</h2><br />
             <p className="text-muted-foreground">{user.first_name || user.username}, здесь вы можете настроить приложение.</p>
           </div>
 

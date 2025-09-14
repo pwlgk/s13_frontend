@@ -21,6 +21,7 @@ import { HomeworkFilters, HomeworkFiltersState } from "@/components/homework-fil
 import { Loader2, AlertTriangle, BookCheck, PlusCircle } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { SlidersHorizontal } from "lucide-react";
+import { Header } from "@/components/header";
 // Определяем типы на основе вашей OpenAPI спеки
 interface LessonForHomework {
   subject_name: string;
@@ -111,13 +112,14 @@ export default function HomeworkPage() {
   const allHomeworks = data?.pages.flatMap(page => page.items) ?? [];
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col">
+      <Header />
       <main className="flex-1 overflow-y-auto pb-20">
         <div className="container mx-auto max-w-2xl p-4 space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-bold tracking-tight">Домашние задания</h2> <br />
-              <p className="text-muted-foreground">Поиск и фильтрация заданий для вашей группы.</p>
+              <h2 className="text-2xl font-bold tracking-tight">Домашние задания</h2> 
+              {/* <p className="text-muted-foreground">Поиск и фильтрация заданий для вашей группы.</p> */}
             </div>
             <CreateHomeworkDialog>
               <Button>
