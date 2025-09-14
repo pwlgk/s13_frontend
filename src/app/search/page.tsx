@@ -7,7 +7,6 @@ import { GroupSearch } from "@/components/group-search";
 import { TutorSearch } from "@/components/tutor-search"; // Создадим далее
 import { WeekScheduleView } from "@/components/week-schedule-view";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Header } from "@/components/header";
 
 // Универсальный тип для выбранной сущности
 interface SearchEntity {
@@ -21,7 +20,7 @@ export default function SearchPage() {
 
   return (
     <div className="flex flex-col">
-      <Header />
+      
       <main className="flex-1 overflow-y-auto pb-20">
         <div className="container mx-auto max-w-4xl p-4 space-y-6">
           <div>

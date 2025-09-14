@@ -17,7 +17,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar as CalendarIcon, AlertTriangle, Users } from "lucide-react";
 import { LessonOptionsDialog } from "@/components/lesson-options-dialog";
 import { HomeworkDialog } from "@/components/homework-dialog"; // <-- Импортируем компонент ДЗ
-import { Header } from "@/components/header";
 
 // Определяем типы на основе вашей OpenAPI спецификации
 interface Tutor { name: string; }
@@ -108,7 +107,7 @@ export default function SchedulePage() {
 
   return (
     <div className="flex flex-col">
-      <Header />
+      
       <main className="flex-1 overflow-y-auto pb-20">
         <div className="container mx-auto max-w-2xl p-4 space-y-4">
           

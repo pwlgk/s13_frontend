@@ -20,7 +20,6 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2, Pencil } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { Header } from "@/components/header";
 
 // 1. ПРОСТОЙ ИНТЕРФЕЙС ВМЕСТО СХЕМЫ ZOD
 interface SettingsFormValues {
@@ -111,7 +110,7 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-col">
-      <Header />
+      
       <main className="flex-1 overflow-y-auto pb-20">
         <div className="container mx-auto max-w-2xl p-4 space-y-8">
           <div>
