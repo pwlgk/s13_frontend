@@ -29,7 +29,7 @@
 - **Язык:** [TypeScript](https://www.typescriptlang.org/)
 - **Стилизация:** [Tailwind CSS](https://tailwindcss.com/)
 - **UI-компоненты:** [shadcn/ui](https://ui.shadcn.com/)
-- **Управление состоянием:** [Zustand](https://github.com/pmndrs/zustand) (или аналогичный, судя по структуре `store`)
+- **Управление состоянием:** [Zustand](https://github.com/pmndrs/zustand)
 - **Линтинг и форматирование:** [ESLint](https://eslint.org/)
 
 ---
